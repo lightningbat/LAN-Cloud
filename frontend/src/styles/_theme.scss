@@ -1,0 +1,31 @@
+$theme-light: (
+    bg-primary: #ffffff,
+    bg-secondary: #f5f5f5,
+    bg-interactive: #ebebeb,
+    bg-lock-screen: #ffffff,
+    border: #d4d4d4,
+    text-primary: #2e2e2e,
+    qa-green: (61, 139, 93), // quick access
+    qa-red: (184, 75, 75),
+    qa-violet: (187, 103, 180),
+    qa-blue: (75, 121, 180),
+    scroll-track: #f0f0f0,
+    scroll-thumb: #c5c5c5,
+    error: #db4242,
+);
+
+$theme-dark: (
+    bg-primary: #0A0E14,
+    bg-secondary: #10151C,
+    bg-interactive: #1c1f25,
+    bg-lock-screen: #13171d,
+    border: #616161,
+    text-primary: #f1f1f1,
+    qa-green: (80, 218, 137),
+    qa-red: (250, 83, 83),
+    qa-violet: (252, 81, 235),
+    qa-blue: (112, 174, 255),
+    scroll-track: #2c2c2c,
+    scroll-thumb: #5f5f5f,
+    error: #eb2424,
+);

@@ -1,0 +1,8 @@
+@use "./variables";
+
+@mixin theme-transition {
+    transition: background-color calc(variables.$theme-switch-delay/2) ease-in-out,
+        color calc(variables.$theme-switch-delay * 1.2) ease-in-out,
+        border-color variables.$theme-switch-delay ease-in-out,
+        stroke variables.$theme-switch-delay ease-in-out;
+}

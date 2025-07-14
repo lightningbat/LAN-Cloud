@@ -1,0 +1,116 @@
+@use "../../../styles/variables";
+
+.quick-access {
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    margin: 1rem 1rem 0 1rem;
+
+    &.collapsed {
+        .quick-access-content {
+            height: 0;
+        }
+        .quick-access-expand-btn {
+            .icon {
+                transform: rotate(-180deg);
+            }
+        }
+    }
+
+    .quick-access-content {
+        overflow: hidden;
+        height: 100px;
+        transition: height variables.$collapse-duration ease;
+    }
+
+    .quick-access-title {
+        font-size: 1rem;
+        font-weight: 500;
+    }
+
+    .quick-access-btns {
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        column-gap: 2rem;
+        margin-top: 1rem;
+        padding-bottom: 0.3rem;
+
+        &::-webkit-scrollbar {
+            height: 3px;
+        }
+        
+        .quick-access-btn {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.8rem 1.3rem;
+            border: none;
+            border-radius: variables.$base-border-radius;
+            cursor: pointer;
+
+            p {
+                font-weight: 400;
+                font-size: 0.9rem;
+            }
+
+            span {
+                font-weight: 500;
+                display: block;
+                margin-left: 0.5rem;
+            }
+
+            &.Images {
+                color: rgb(var(--qa-green));
+                background-color: rgba(var(--qa-green), 0.15);
+
+                svg {
+                    stroke: rgb(var(--qa-green));
+                }
+            }
+
+            &.Videos {
+                color: rgb(var(--qa-red));
+                background-color: rgba(var(--qa-red), 0.15);
+
+                svg {
+                    stroke: rgb(var(--qa-red));
+                }
+            }
+
+            &.Audios {
+                color: rgb(var(--qa-violet));
+                background-color: rgba(var(--qa-violet), 0.15);
+
+                svg {
+                    stroke: rgb(var(--qa-violet));
+                }
+            }
+
+            &.Documents {
+                color: rgb(var(--qa-blue));
+                background-color: rgba(var(--qa-blue), 0.15);
+
+                svg {
+                    stroke: rgb(var(--qa-blue));
+                }
+            }
+        }
+    }
+
+    .quick-access-expand-btn {
+        position: absolute;
+        bottom: -12px;
+        right: 0;
+        border: none;
+        background-color: var(--bg-primary);
+        border: 2px solid var(--border);
+        cursor: pointer;
+        width: 1.3rem;
+        height: 1.3rem;
+        border-radius: 50%;
+        
+        .icon {
+            transition: transform variables.$collapse-duration ease;
+        }
+    }
+}

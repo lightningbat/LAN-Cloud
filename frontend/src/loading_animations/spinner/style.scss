@@ -1,0 +1,22 @@
+.loading-animation.spinner {
+    width: 1em;
+    height: 1em;
+    border-style: solid;
+    border-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s ease-in-out infinite;
+    -webkit-animation: spin 1s ease-in-out infinite;
+    border-top-color: var(--text-primary);
+
+    @keyframes spin {
+        to {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+
+    @-webkit-keyframes spin {
+        to {
+            -webkit-transform: rotate(360deg);
+        }
+    }
+}

@@ -1,0 +1,30 @@
+@use "../../../styles/variables";
+
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .flex {
+        display: flex;
+        gap: 1.2rem;
+        align-items: center;
+        
+        .search-box-cont {
+            width: clamp(200px, 30vw, 300px);
+        }
+    }
+    
+    @media screen and (max-width: variables.$side-menu-full-screen-width) {
+        height: 100%;
+        background-color: var(--bg-secondary);
+        .search-box-cont, .menu-open-btn, .clipboard-btn {
+            display: none;
+        }
+        
+        .flex {
+            width: 100%;
+            justify-content: space-around;
+        }
+    }
+}

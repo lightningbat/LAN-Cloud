@@ -1,0 +1,71 @@
+@use "../../styles/variables";
+
+$search-box-height: 3rem;
+
+.search-box {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-interactive);
+    width: 100%;
+    height: fit-content;
+    border-radius: variables.$base-border-radius;
+    overflow: hidden;
+    
+    .search-icon-cont {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: $search-box-height;
+        padding-left: 0.5rem;
+        cursor: text;
+    }
+
+    input {
+        flex: 1;
+        border: none;
+        outline: none;
+        background-color: transparent;
+        color: var(--text-primary);
+        height: $search-box-height;
+        width: 100%;
+        padding: 0 0.5rem;
+        font-size: 0.9rem;
+        font-family: "Inter";
+        font-weight: 400;
+    }
+
+    button {
+        flex-shrink: 0;
+        border: none;
+        outline: none;
+        background: transparent;
+        border-left: 1px solid var(--border);
+        color: var(--text-primary);
+        height: 3rem;
+        width: 3rem;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+        display: none;
+    }
+
+    &:focus-within {
+        button {
+            display: flex;
+            animation: slideIn 400ms ease-in-out;
+        }
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        .search-icon-cont {
+            display: none;
+        }
+    }
+}

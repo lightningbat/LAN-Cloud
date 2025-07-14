@@ -1,0 +1,32 @@
+@use "../../../styles/variables";
+
+.explorer {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: 1rem;
+    margin-left: 1rem;
+    flex: 1;
+
+    .explorer-top-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding-right: 1rem;
+    }
+
+    .left-right {
+        flex: 1;
+        display: flex;
+        margin-top: 1rem;
+        overflow-y: hidden;
+
+        .pc-action-bar {
+            @media screen and (max-width: variables.$side-menu-full-screen-width) {
+                display: none;
+            }
+        }
+    }
+
+}

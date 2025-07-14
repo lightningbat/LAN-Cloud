@@ -1,0 +1,64 @@
+@use "../styles/variables";
+
+.layout {
+    display: flex;
+}
+
+.side-menu {
+    flex-shrink: 0;
+    width: 250px;
+    height: 100dvb;
+    transition: width variables.$side-menu-collapse-duration ease-in-out;
+    overflow: hidden;
+
+    &.closed {
+        width: 0px;
+    }
+}
+
+@media screen and (max-width: variables.$side-menu-float-width) {
+    .layout {
+        display: block;
+    }
+    .side-menu {
+        z-index: 1;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 250px;
+        height: 100vh;
+    }
+}
+
+@media screen and (max-width: variables.$side-menu-full-screen-width) {
+    .layout {
+        display: block;
+    }
+    .side-menu {
+        z-index: 1;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        border: none;
+    }
+    
+}
+
+.content {
+    flex: 1;
+    height: 100dvh;
+    padding-top: 1rem;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+
+    .pc-toolbar {
+        margin: 0 1rem;
+        
+        @media screen and (max-width: variables.$side-menu-full-screen-width) {
+            display: none;
+        }
+    }
+}

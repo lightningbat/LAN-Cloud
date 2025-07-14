@@ -1,0 +1,75 @@
+@use "../../../styles/variables";
+
+.tags {
+    margin: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+    padding-top: 0.5rem;
+    position: relative;
+
+    .collapsable {
+        height: 72px;
+        overflow: hidden;
+        transition: height variables.$collapse-duration ease;
+    }
+
+    &.collapsed {
+        .collapsable {
+            height: 0;
+        }
+
+        .tag-expand-btn {
+            .icon{
+                transform: rotate(180deg);
+            }
+        }
+    }
+
+    .tag-list {
+        display: flex;
+        align-items: center;
+        gap: 2rem;
+        overflow-x: auto;
+        padding: 0.3rem 0;
+        margin-top: 0.5rem;
+
+        &::-webkit-scrollbar {
+            height: 3px;
+        }
+
+        .tag {
+            display: flex;
+            align-items: center;
+            background-color: var(--bg-interactive);
+            height: 32px;
+            border-radius: 16px;
+
+            .circle {
+                height: 32px;
+                width: 32px;
+                border-radius: 50%;
+            }
+
+            p {
+                padding: 0.3rem 0.8rem;
+                padding-right: 1.5rem;
+                font-size: 0.8rem;
+                white-space: nowrap;
+            }
+        }
+    }
+
+    .tag-expand-btn {
+        position: absolute;
+        top: -10px;
+        right: 0;
+        background-color: var(--bg-primary);
+        border: 1px solid var(--border);
+        border-radius: 50%;
+        height: 1.3rem;
+        width: 1.3rem;
+
+        .icon {
+            transition: transform variables.$collapse-duration ease;
+        }
+    }
+}

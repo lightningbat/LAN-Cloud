@@ -1,0 +1,41 @@
+import "./style.scss"
+import { HomeIcon, ArrowHeadRightIcon } from "../../../../../icons";
+import { useExplorerContext } from "../../../../../context/explorer_context";
+import { useEffect, useState } from "react";
+
+export default function Path(props) {
+    const { loading, foldersData, selectedFolderId, setSelectedFolderId } = useExplorerContext();
+    const [path, setPath] = useState([]);
+
+    useEffect(() => {
+        if (selectedFolderId === null || selectedFolderId === "root") { // since root is hard cooded
+            setPath([]);
+            return;
+        }
+        // load current path
+        const _path = [{ id: selectedFolderId, name: foldersData[selectedFolderId]?.name, loading: loading === selectedFolderId  }];
+        
+        if (!foldersData[selectedFolderId]) return;
+        // climb up till root is reached or parent folder is not loaded 
+        let currentFolderId = foldersData[selectedFolderId].parent_id;
+        while (foldersData[currentFolderId] && currentFolderId !== "root") {
+            _path.unshift({ id: currentFolderId, name: foldersData[currentFolderId]?.name, loading: loading === currentFolderId });
+            currentFolderId = foldersData[currentFolderId]?.parent_id;
+        }
+        setPath(_path);
+    }, [selectedFolderId, foldersData, loading])
+    
+    return (
+        <div className="path" {...props} >
+            {foldersData["root"] && <div className="node root" onClick={()=> setSelectedFolderId("root")}><HomeIcon style={{ width: '1.2rem', height: '1.2rem' }} /></div>}
+            {path != "" &&
+                <div className="sub-nodes">
+                    {path.map((node) => <>
+                        <ArrowHeadRightIcon style={{ width: '1rem', height: '1rem' }} />
+                        <div className="node" onClick={()=> setSelectedFolderId(node.id)} key={node.id}>{node.name}</div>
+                    </>)}
+                </div>
+            }
+        </div>
+    )
+}

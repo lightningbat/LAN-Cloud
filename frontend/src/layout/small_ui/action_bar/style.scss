@@ -1,0 +1,33 @@
+@use "../../../styles/variables";
+
+.action-bar {
+    display: flex;
+    overflow: auto;
+    align-items: center;
+    height: 100%;
+    background-color: var(--bg-secondary);
+
+    &::-webkit-scrollbar {
+        display: none;
+    }
+
+    @media screen and (min-width: variables.$side-menu-full-screen-width) {
+        max-height: 450px;
+        flex-direction: column;
+        gap: 0.2rem;
+        justify-content: space-around;
+        padding: 0.2rem;
+        border-radius: variables.$mx-border-radius 0 0 variables.$mx-border-radius;
+    }
+    @media screen and (max-width: variables.$side-menu-full-screen-width) {
+        gap: 1rem;
+    }
+
+    button {
+        border: none;
+        background-color: transparent;
+        cursor: pointer;
+        outline: none;
+        padding: 0.3rem;
+    }
+}
