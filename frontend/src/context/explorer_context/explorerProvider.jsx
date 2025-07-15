@@ -100,7 +100,6 @@ const ExplorerProvider = ({ children }) => {
                 (async () => {
                     // load current folder
                     await loadFolder(selectedFolderId);
-                    setLoading(null);
 
                     // climb up till root folder and load all missing parent folders
                     let parent_folder_id = foldersData[selectedFolderId].parent_id;
@@ -116,7 +115,6 @@ const ExplorerProvider = ({ children }) => {
                         return await recurse(foldersData[parent_folder_id].parent_id);
                     }
                     await recurse(parent_folder_id);
-                    setLoading(null);
                 })();
             }
         }
@@ -133,11 +131,13 @@ const ExplorerProvider = ({ children }) => {
             response = await _fetch("getFolder", { session_id: SessionId, folder_id });
         } catch {
             alert("Failed to get folder data");
+            setLoading(null);
             return false;
         }
 
         if (response.status !== 200) {
             alert("Failed to get folder data");
+            setLoading(null);
             return false;
         }
 
@@ -158,9 +158,11 @@ const ExplorerProvider = ({ children }) => {
                 }
             });
             if (setActiveFolder) setSelectedFolderId(folder_id);
+            setLoading(null);
             return true;
         } catch (err) {
             alert("Failed to decrypt folder data");
+            setLoading(null);
             console.error(err);
             return false;
         }
