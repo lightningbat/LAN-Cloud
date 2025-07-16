@@ -246,6 +246,7 @@ func getFolder(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// return basic tags info (tag name, id, color, etc.)
 func getTags(w http.ResponseWriter, r *http.Request) {
 	// parse request body
 	var folder struct {
@@ -287,46 +288,88 @@ func getTags(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// func getRootDirPath(w http.ResponseWriter, r *http.Request) {
-// 	data := core.GetRootDirPath()
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(data)
-// }
+func getTagItems(w http.ResponseWriter, r *http.Request) {
+	// parse request body
+	var request struct {
+		Tag struct{ 
+			Type string `json:"type"`
+			Id   string `json:"id"` } `json:"tag"`
+		SessionId string `json:"session_id"`
+	} // request body struct
+	err := json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// func getFolder(w http.ResponseWriter, r *http.Request) {
-// 	// parse request body
-// 	var folder struct { Folder []string `json:"folder"` } // request body struct
-// 	err := json.NewDecoder(r.Body).Decode(&folder)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	// get session key from session
+	sessionKey, found := core.SessionKeyCache.Get(request.SessionId)
+	if !found {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
 
-// 	// get folder data
-// 	data, err := core.GetFolder(&folder.Folder)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(data)
-// }
+	// get tag items data
+	data, err := core.GetTagItems(request.Tag.Type, request.Tag.Id)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// encrypt tag items data
+	ivBase64, ciphertextBase64, err := crypto.EncryptAESGCM(sessionKey.([]byte), data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 
-// func getFile(w http.ResponseWriter, r *http.Request) {
-// 	// parse request body
-// 	var fileIds struct { FileIds []string `json:"file_ids"` } // request body struct
-// 	err := json.NewDecoder(r.Body).Decode(&fileIds)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		IVBase64            string `json:"iv_base64"`
+		CiphertextBase64    string `json:"ciphertext_base64"`
+	}{
+		ivBase64,
+		ciphertextBase64,
+	})
+}
 
-// 	// get files data
-// 	data, err := core.GetFiles(&fileIds.FileIds)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusBadRequest)
-// 		return
-// 	}
-// 	w.Header().Set("Content-Type", "application/json")
-// 	w.Write(data)
-// }
+func getFilesMetaData(w http.ResponseWriter, r *http.Request) {
+	// parse request body
+	var folder struct {
+		FileIds   []string `json:"file_ids"`
+		SessionId string `json:"session_id"`
+	} // request body struct
+	err := json.NewDecoder(r.Body).Decode(&folder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// get session key from session
+	sessionKey, found := core.SessionKeyCache.Get(folder.SessionId)
+	if !found {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	// get files metadata data
+	data, err := core.GetFilesMetadata(&folder.FileIds)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// encrypt files metadata data
+	ivBase64, ciphertextBase64, err := crypto.EncryptAESGCM(sessionKey.([]byte), data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		IVBase64            string `json:"iv_base64"`
+		CiphertextBase64    string `json:"ciphertext_base64"`
+	}{
+		ivBase64,
+		ciphertextBase64,
+	})
+}

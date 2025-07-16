@@ -13,7 +13,7 @@ type FileMetadata struct {
 	ModifiedTime int64    `json:"modified_time"`
 	Owners       []string `json:"owners"`
 	Tags         []string `json:"tags"`
-	SystemTag    string   `json:"system_tag"` // file type (image, video, audio, document, etc.)
+	SystemTag    string   `json:"system_tag"` // file type (images, videos, audios, documents, etc.)
 }
 
 type FolderMetadata struct {

@@ -13,4 +13,6 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /refreshSessionKey", refreshSessionKey)
 	mux.HandleFunc("POST /getFolder", getFolder)
 	mux.HandleFunc("POST /getTags", getTags)
+	mux.HandleFunc("POST /getTagItems", getTagItems)
+	mux.HandleFunc("POST /getFilesMetaData", getFilesMetaData)
 }

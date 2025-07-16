@@ -58,10 +58,10 @@ func GetTags() (data []byte, err error) {
 		DocumentCount int `json:"document_count"`
 		CustomTags map[string]UserTag `json:"custom_tags"`
 	}
-	response.ImageCount = len(shared.SystemTags["image"])
-	response.VideoCount = len(shared.SystemTags["video"])
-	response.AudioCount = len(shared.SystemTags["audio"])
-	response.DocumentCount = len(shared.SystemTags["document"])
+	response.ImageCount = len(shared.SystemTags["images"])
+	response.VideoCount = len(shared.SystemTags["videos"])
+	response.AudioCount = len(shared.SystemTags["audios"])
+	response.DocumentCount = len(shared.SystemTags["documents"])
 	for id, tag := range shared.UserTagsMetadata {
 		response.CustomTags[tag.Name] = UserTag{
 			Name:  tag.Name,
@@ -76,17 +76,21 @@ func GetTags() (data []byte, err error) {
 	return data, nil
 }
 
-// func GetFiles(fileIds *[]string) ([]byte, error) {
-// 	files := make(map[string]string) // fileId => fileName
-// 	for _, fileId := range *fileIds {
-// 		file, ok := shared.FileMetadataMap[fileId]
-// 		if ok {
-// 			files[fileId] = file.Name
-// 		}
-// 	}
-// 	jsonData, err := json.Marshal(files)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("failed to marshal files data: %v", err)
-// 	}
-// 	return jsonData, nil
-// }
+func GetTagItems(tag_type string, tag_id string) (data []byte, err error) {
+	if tag_type == "System" {
+		return json.Marshal(shared.SystemTags[tag_id])
+	} else {
+		return json.Marshal(shared.UserTagsItems[tag_id])
+	}
+}
+
+func GetFilesMetadata(fileIds *[]string) ([]byte, error) {
+	filesMetadata := make(map[string]*shared.FileMetadata) // fileId => fileName
+	for _, fileId := range *fileIds {
+		fileMetadata, ok := shared.FileMetadataMap[fileId]
+		if ok {
+			filesMetadata[fileId] = fileMetadata
+		}
+	}
+	return json.Marshal(filesMetadata)
+}

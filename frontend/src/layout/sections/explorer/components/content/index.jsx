@@ -3,7 +3,7 @@ import { FolderIcon, FileIcon } from '../../../../../icons'
 import { useExplorerContext } from '../../../../../context/explorer_context';
 
 export default function Content() {
-    const { loading, foldersData, filesData, selectedFolderId, setSelectedFolderId } = useExplorerContext();
+    const { loading, foldersData, filesData, selectedFolderId, setSelectedFolderId, selectedTagState, tagsItems } = useExplorerContext();
 
     return (
         <div className="explorer-content">
@@ -18,6 +18,9 @@ export default function Content() {
                     <Folder key={folder_id} onClick={() => setSelectedFolderId(folder_id)} name={foldersData[folder_id]?.name} size={foldersData[folder_id]?.size} modified={foldersData[folder_id]?.modified_time} />)
                 }
                 {selectedFolderId && loading !== selectedFolderId && Object.keys(foldersData[selectedFolderId]?.files).map((file_id) =>
+                    <File key={file_id} name={filesData[file_id]?.name} size={filesData[file_id]?.size} modified={filesData[file_id]?.modified_time} />
+                )}
+                {selectedTagState && Object.keys(tagsItems?.[selectedTagState.type]?.[selectedTagState?.id] || {}).map((file_id) =>
                     <File key={file_id} name={filesData[file_id]?.name} size={filesData[file_id]?.size} modified={filesData[file_id]?.modified_time} />
                 )}
             </div>

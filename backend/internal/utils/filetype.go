@@ -18,14 +18,15 @@ func GetFileCategory(fileName string) string {
 	}
 	fileExtension := strings.Split(fileName, ".")[1]
 
+	/* Note: using plural form of file categories, to be consistent with the category names */
 	if _, ok := supportedImageExtensions[fileExtension]; ok {
-		return "image"
+		return "images"
 	} else if _, ok := supportedVideoExtensions[fileExtension]; ok {
-		return "video"
+		return "videos"
 	} else if _, ok := supportedAudioExtensions[fileExtension]; ok {
-		return "audio"
+		return "audios"
 	} else if _, ok := supportedDocumentExtensions[fileExtension]; ok {
-		return "document"
+		return "documents"
 	} else {
 		return ""
 	}

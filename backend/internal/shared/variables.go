@@ -18,7 +18,7 @@ var (
 		FolderRelPathToId = make(map[string]string) // relative path => folder id
 		FileRelPathToId  = make(map[string]string) // relative path => file id
 		// holds file ids for each system tag
-		SystemTags = map[string]map[string]struct{}{"image": {}, "video": {}, "audio": {}, "document": {}} // e.g. image: {id1: {}, id2: {}, ...}
+		SystemTags = map[string]map[string]struct{}{"images": {}, "videos": {}, "audios": {}, "documents": {}} // e.g. image: {id1: {}, id2: {}, ...}
 		// ram cache for custom tags list
 		UserTagsItems = make(map[string]map[string]string) // user tag id => map[file/folder id => "file"/"folder"]
 	// metadata.go //

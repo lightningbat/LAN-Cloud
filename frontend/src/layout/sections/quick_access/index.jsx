@@ -13,7 +13,7 @@ export default function QuickAccess() {
 
     const [itemCounts, setItemCounts] = useState([0, 0, 0, 0]);
     const [collapsed, setCollapsed] = useState(false);
-    const { tagsInfo } = useExplorerContext();
+    const { tagsInfo, setSelectedTagState } = useExplorerContext();
 
     useEffect(() => {
         setItemCounts([
@@ -29,7 +29,7 @@ export default function QuickAccess() {
             <div className="quick-access-content">
                 <h2 className="quick-access-title">Quick Access</h2>
                 <div className="quick-access-btns">
-                    {btns.map((btn, index) => <Button key={index} icon={btn[0]} name={btn[1]} itemCounts={itemCounts[index]} />)}
+                    {btns.map((btn, index) => <Button key={index} icon={btn[0]} name={btn[1]} itemCounts={itemCounts[index]} setSelectedTagState={setSelectedTagState} />)}
                 </div>
             </div>
             <button className="quick-access-expand-btn"
@@ -40,9 +40,9 @@ export default function QuickAccess() {
     )
 }
 
-function Button({ icon, name, itemCounts }) {
+function Button({ icon, name, itemCounts, setSelectedTagState }) {
     return (
-        <button className={`quick-access-btn ${name}`}>
+        <button className={`quick-access-btn ${name}`} onClick={()=> setSelectedTagState({type: "SystemTags", id: name.toLowerCase()})}>
             {icon}
             <p>{name}</p>
             <span>{itemCounts}</span>

@@ -1,14 +1,26 @@
 import { useEffect, useState } from "react";
 import ExplorerContext from "./explorerContext";
 import { useUiContext } from "../ui_context";
-import { getKey, decryptAESGCM } from "../../utils/crypto";
+import { getKey, decryptAESGCM, decryptJSON } from "../../utils/crypto";
 import { useImmer } from "use-immer";
 
 const ExplorerProvider = ({ children }) => {
+    const { authenticated } = useUiContext();
+
     const [loading, setLoading] = useState(null);
     const [foldersData, updateFoldersData] = useImmer({});
     const [filesData, updateFilesData] = useImmer({});
-    const [selectedFolderId, setSelectedFolderId] = useState(null);
+    const [selectedFolderId, _setSelectedFolderId] = useState(null);
+    const [selectedTagState, _setSelectedTagState] = useState(null); // null | { type: "SystemTags" | "User", id: tag_id | "image" | "video" | "audio" | "document" }
+    const [tagsItems, updateTagsItems] = useImmer({
+        SystemTags: {
+            images: {}, // file id => {}
+            videos: {},
+            audios: {},
+            documents: {}
+        },
+        UserTags: {} // tag id => { file id => "file" | "folder" }
+    });
     const [tagsInfo, updateTagsInfo] = useImmer({
         SystemTags: {
             images: 0,
@@ -26,21 +38,24 @@ const ExplorerProvider = ({ children }) => {
         }
     })
 
-    // useEffect(() => {
-    //     console.log("selectedFolderId", selectedFolderId);
-    // }, [selectedFolderId])
+    function setSelectedFolderId(id) {
+        if (id === null) {
+            _setSelectedFolderId(null);
+        } else {
+            _setSelectedFolderId(id);
+            _setSelectedTagState(null);
+        }
+    }
 
+    function setSelectedTagState({ type, id }) {
+        if (type === null) {
+            _setSelectedTagState(null);
+        } else {
+            _setSelectedTagState({ type, id });
+            _setSelectedFolderId(null);
+        }
+    };
     
-    // useEffect(() => {
-    //     console.log("foldersData", foldersData);
-    //     console.log("filesData", filesData);
-    // }, [foldersData, filesData])
-    
-    // useEffect(() => {
-    //     console.table({ loading, selectedFolderId });
-    // }, [loading]);
-    
-    const { authenticated } = useUiContext();
 
     function _fetch(route, body) {
         return fetch(`${import.meta.env.VITE_SERVER_URL}/${route}`, {
@@ -168,6 +183,61 @@ const ExplorerProvider = ({ children }) => {
         }
     }
 
+    useEffect(() => {
+        if (selectedTagState === null) return;
+        if (selectedTagState.type === "SystemTags") {
+            // check if system tag is already loaded
+            const current_items_count = Object.keys(tagsItems.SystemTags[selectedTagState.id]).length;
+            if (current_items_count !== tagsInfo.SystemTags[selectedTagState.id]) {
+                (async () => {
+                    const { Key, SessionId } = getKey();
+                    const resp = await _fetch("getTagItems", { session_id: SessionId, tag: { type: "System", id: selectedTagState.id } });
+                    if (resp.status !== 200) {
+                        alert("Failed to get tag items");
+                        return;
+                    }
+                    const { iv_base64: iv, ciphertext_base64: ciphertext } = await resp.json();
+                    try {
+                        const decryptedData = await decryptJSON(Key, iv, ciphertext);
+                        updateTagsItems(draft => {
+                            draft.SystemTags[selectedTagState.id] = decryptedData;
+                        });
+                        loadFilesMetaData(decryptedData);
+                    } catch (err) {
+                        alert("Failed to decrypt tag items");
+                        console.error(err);
+                    }
+                })()
+            }
+        }
+    }, [selectedTagState])
+
+    async function loadFilesMetaData(fileIds) {
+        // checking if files are already loaded
+        const missing_files = Object.keys(fileIds).filter(file_id => !filesData[file_id]);
+        if (missing_files.length > 0) {
+            const { Key, SessionId } = getKey();
+            const resp = await _fetch("getFilesMetaData", { session_id: SessionId, file_ids: missing_files });
+            if (resp.status !== 200) {
+                alert("Failed to get files meta data");
+                return;
+            }
+            const { iv_base64: iv, ciphertext_base64: ciphertext } = await resp.json();
+            try {
+                const decryptedData = await decryptJSON(Key, iv, ciphertext);
+                updateFilesData(draft => {
+                    for (const [file_id, file] of Object.entries(decryptedData)) {
+                        draft[file_id] = file;
+                    }
+                });
+            } catch (err) {
+                alert("Failed to decrypt files meta data");
+                console.error(err);
+            }
+        }
+
+    }
+
     return (
         <ExplorerContext.Provider value={{
             loading,
@@ -178,7 +248,11 @@ const ExplorerProvider = ({ children }) => {
             selectedFolderId,
             setSelectedFolderId,
             tagsInfo,
-            loadFolder
+            loadFolder,
+            selectedTagState,
+            setSelectedTagState,
+            tagsItems
+
         }}>
             {children}
         </ExplorerContext.Provider>
