@@ -61,6 +61,10 @@ func loadMetaData(filePath string) (error) {
 			err = json.Unmarshal(data, &shared.FolderMetadataMap)
 		case userTagsMetaDataPath: // load data into UserTagsMetadata
 			err = json.Unmarshal(data, &shared.UserTagsMetadata)
+			// create empty user tag id map in user tag items
+			for id := range shared.UserTagsMetadata {
+				shared.UserTagsItems[id] = make(map[string]string)
+			}
 	}
 	if err != nil {
 		return fmt.Errorf("failed to read metadata file: %v", err)

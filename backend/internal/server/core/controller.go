@@ -94,3 +94,14 @@ func GetFilesMetadata(fileIds *[]string) ([]byte, error) {
 	}
 	return json.Marshal(filesMetadata)
 }
+
+func GetFoldersMetadata(folderIds *[]string) ([]byte, error) {
+	foldersMetadata := make(map[string]*shared.FolderMetadata) // folderId => folderName
+	for _, folderId := range *folderIds {
+		folderMetadata, ok := shared.FolderMetadataMap[folderId]
+		if ok {
+			foldersMetadata[folderId] = folderMetadata
+		}
+	}
+	return json.Marshal(foldersMetadata)
+}

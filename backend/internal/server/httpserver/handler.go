@@ -373,3 +373,45 @@ func getFilesMetaData(w http.ResponseWriter, r *http.Request) {
 		ciphertextBase64,
 	})
 }
+
+func getFoldersMetaData(w http.ResponseWriter, r *http.Request) {
+	// parse request body
+	var folder struct {
+		FolderIds []string `json:"folder_ids"`
+		SessionId string `json:"session_id"`
+	} // request body struct
+	err := json.NewDecoder(r.Body).Decode(&folder)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// get session key from session
+	sessionKey, found := core.SessionKeyCache.Get(folder.SessionId)
+	if !found {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	// get folders metadata data
+	data, err := core.GetFoldersMetadata(&folder.FolderIds)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	// encrypt folders metadata data
+	ivBase64, ciphertextBase64, err := crypto.EncryptAESGCM(sessionKey.([]byte), data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		IVBase64            string `json:"iv_base64"`
+		CiphertextBase64    string `json:"ciphertext_base64"`
+	}{
+		ivBase64,
+		ciphertextBase64,
+	})
+}
