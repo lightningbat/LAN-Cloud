@@ -51,19 +51,19 @@ func GetTags() (data []byte, err error) {
 		Color string `json:"color"`
 		ItemCount int `json:"item_count"`
 	}
-	var response struct {
+	var response = struct {
 		ImageCount    int `json:"image_count"`
 		VideoCount    int `json:"video_count"`
 		AudioCount    int `json:"audio_count"`
 		DocumentCount int `json:"document_count"`
-		CustomTags map[string]UserTag `json:"custom_tags"`
-	}
+		CustomTags    map[string]UserTag `json:"custom_tags"`
+	}{CustomTags: make(map[string]UserTag)}
 	response.ImageCount = len(shared.SystemTags["images"])
 	response.VideoCount = len(shared.SystemTags["videos"])
 	response.AudioCount = len(shared.SystemTags["audios"])
 	response.DocumentCount = len(shared.SystemTags["documents"])
 	for id, tag := range shared.UserTagsMetadata {
-		response.CustomTags[tag.Name] = UserTag{
+		response.CustomTags[id] = UserTag{
 			Name:  tag.Name,
 			Color: tag.Color,
 			ItemCount: len(shared.UserTagsItems[id]),
