@@ -1,6 +1,6 @@
 import "./style.scss"
 import { CloseIcon, ArrowHeadRightIcon, ArrowHeadDownIcon } from "../../../icons"
-import { useEffect } from "react"
+import { useEffect, useRef } from "react"
 import { useUiContext } from "../../../context/ui_context"
 import { useExplorerContext } from "../../../context/explorer_context"
 import { useImmer } from "use-immer"
@@ -8,10 +8,9 @@ import { useImmer } from "use-immer"
 export default function FolderTree() {
     // use ui context
     const { isFolderTreeOpen, setIsFolderTreeOpen } = useUiContext();
-    const { foldersData, selectedFolderId, setSelectedFolderId, loadFolder } = useExplorerContext();
+    const { foldersData, selectedFolderId } = useExplorerContext();
     const [nodeState, setNodeState] = useImmer({});
-
-    // console.log(nodeState["root"]);
+    const folderTreeRef = useRef(null);
 
     useEffect(() => {
         if (foldersData["root"]) {
@@ -33,18 +32,32 @@ export default function FolderTree() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [foldersData])
 
-    // set node state to open for selected folder
+    // recurse from selected folder to root to set node state to open
     useEffect(() => {
         if (selectedFolderId) {
             setNodeState(draft => {
                 draft[selectedFolderId] = true;
-                // if (selectedFolderId !== "root"){
-                //     // recurse back to root/missing folder to open all parent folders
-                // }
+                function recurse(parent_id) {
+                    if (parent_id === "root" || !foldersData[parent_id]) return;
+                    draft[parent_id] = true;
+                    recurse(foldersData[parent_id].parent_id);
+                }
+                if (selectedFolderId !== "root") recurse(foldersData[selectedFolderId].parent_id);
             })
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [selectedFolderId])
+    }, [selectedFolderId, foldersData])
+
+    // scrolls to the selected node
+    useEffect(() => {
+        if (selectedFolderId) {
+            const selectedFolder = folderTreeRef.current.querySelector(`.node-${selectedFolderId}`);
+            if (!selectedFolder) return;
+            const rect = selectedFolder.getBoundingClientRect();
+            if (rect.top >= 0 && rect.bottom <= window.innerHeight) return;
+            selectedFolder.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+    }, [selectedFolderId, nodeState])
 
     useEffect(() => {
         const mediaQuery = window.matchMedia("(max-width: 700px)");
@@ -68,7 +81,7 @@ export default function FolderTree() {
     }, [])
 
     return (
-        <div className={`folder-tree ${isFolderTreeOpen ? "active" : "closed"}`}>
+        <div className={`folder-tree ${isFolderTreeOpen ? "active" : "closed"}`} ref={folderTreeRef}>
             <div className="top-bar">
                 <h2 className="title">Folder Tree</h2>
                 <button className="close-btn" onClick={() => setIsFolderTreeOpen(false)}>
@@ -105,7 +118,7 @@ function FolderNode({ folder_id, opened, setOpened, }) {
                     <ArrowHeadRightIcon style={{ width: '0.9rem', height: '0.9rem' }} />
                 }
             </button>
-            <p onClick={() => setSelectedFolderId(folder_id)} className="name">{name}</p>
+            <p onClick={() => setSelectedFolderId(folder_id)} className={`name node-${folder_id}`}>{name}</p>
         </div>
         {opened[folder_id] && <div className="left-right-child">
             <div className="white-space"></div>
