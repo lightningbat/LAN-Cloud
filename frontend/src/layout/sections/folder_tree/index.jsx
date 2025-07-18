@@ -38,7 +38,11 @@ export default function FolderTree() {
             setNodeState(draft => {
                 draft[selectedFolderId] = true;
                 function recurse(parent_id) {
-                    if (parent_id === "root" || !foldersData[parent_id]) return;
+                    if (parent_id === "root") {
+                        draft["root"] = true;
+                        return;
+                    }
+                    if (!foldersData[parent_id]) return;
                     draft[parent_id] = true;
                     recurse(foldersData[parent_id].parent_id);
                 }
@@ -95,7 +99,7 @@ export default function FolderTree() {
 
 function FolderNode({ folder_id, opened, setOpened, }) {
 
-    const { foldersData, selectedFolderId, setSelectedFolderId, loadFolder } = useExplorerContext();
+    const { foldersData, filesData, selectedFolderId, setSelectedFolderId, loadFolder } = useExplorerContext();
 
     let name = "", childNodes = [];
     if (foldersData[folder_id]) {
@@ -107,6 +111,16 @@ function FolderNode({ folder_id, opened, setOpened, }) {
 
     const toggleOpen = () => {
         setOpened(draft => { draft[folder_id] = !draft[folder_id] })
+        // check if folder is already loaded
+        if (foldersData[folder_id]) {
+            // check if folder items are already loaded
+            const subfolders = Object.keys(foldersData[folder_id].sub_folders);
+            const files = Object.keys(foldersData[folder_id].files);
+            
+            const missingSubfolders = subfolders.filter(subfolder => !foldersData[subfolder]);
+            const missingFiles = files.filter(file => !filesData[file]);
+            if (missingSubfolders.length === 0 && missingFiles.length === 0) return;
+        }
         loadFolder(folder_id);
     }
 
