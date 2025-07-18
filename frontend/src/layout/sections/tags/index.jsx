@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useExplorerContext } from "../../../context/explorer_context";
 
 export default function Tags() {
-    const { tagsInfo, setSelectedTagState } = useExplorerContext();
+    const { tagsInfo, selectedTagState, setSelectedTagState } = useExplorerContext();
     const [collapsed, setCollapsed] = useState(false);
 
     return (
@@ -21,6 +21,7 @@ export default function Tags() {
                             id={tag_id}
                             name={tagsInfo.UserTags[tag_id].name} 
                             bgcolor={tagsInfo.UserTags[tag_id].color} 
+                            selectedTagState={selectedTagState}
                             setSelectedTagState={setSelectedTagState} />
                         )}
                 </div>
@@ -29,9 +30,9 @@ export default function Tags() {
     )
 }
 
-function Tag({ id, bgcolor, name, setSelectedTagState }) {
+function Tag({ id, bgcolor, name, selectedTagState, setSelectedTagState }) {
     return (
-        <div className="tag" onClick={() => setSelectedTagState({ type: "UserTags", id })}>
+        <div className={`tag ${selectedTagState?.id === id ? "selected" : ""}`} onClick={() => setSelectedTagState({ type: "UserTags", id })}>
             <div className="circle" style={{ backgroundColor: bgcolor }}></div>
             <p className="name">{name}</p>
         </div>

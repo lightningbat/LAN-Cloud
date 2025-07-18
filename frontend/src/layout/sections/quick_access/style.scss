@@ -33,7 +33,8 @@
         overflow-x: auto;
         column-gap: 2rem;
         margin-top: 1rem;
-        padding-bottom: 0.3rem;
+        padding: 0.3rem 0.3rem;
+        padding-bottom: 0.5rem;
 
         &::-webkit-scrollbar {
             height: 3px;
@@ -47,6 +48,11 @@
             border: none;
             border-radius: variables.$base-border-radius;
             cursor: pointer;
+
+            &.selected {
+                outline: 1px solid var(--text-primary);
+                outline-offset: 3px;
+            }
 
             p {
                 font-weight: 400;
