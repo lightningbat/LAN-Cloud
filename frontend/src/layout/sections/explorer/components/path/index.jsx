@@ -1,11 +1,12 @@
 import "./style.scss"
 import { HomeIcon, ArrowHeadRightIcon, ImageIcon, VideoIcon, AudioIcon, DocumentIcon } from "../../../../../icons";
 import { useExplorerContext } from "../../../../../context/explorer_context";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Path(props) {
     const { loading, foldersData, selectedFolderId, setSelectedFolderId, selectedTagState, tagsInfo } = useExplorerContext();
     const [path, setPath] = useState([]);
+    const scrollablePathPartRef = useRef();
 
     useEffect(() => {
         if (selectedFolderId === null || selectedFolderId === "root") { // since root is hard cooded
@@ -24,6 +25,10 @@ export default function Path(props) {
         }
         setPath(_path);
     }, [selectedFolderId, foldersData, loading])
+
+    useEffect(() => {
+        if (scrollablePathPartRef.current) scrollablePathPartRef.current.scrollLeft = scrollablePathPartRef.current.scrollWidth
+    }, [path])
     
     return (
         <div className="path" {...props} >
@@ -43,7 +48,7 @@ export default function Path(props) {
                 </div>
             )}
             {path != "" &&
-                <div className="sub-nodes">
+                <div className="sub-nodes" ref={scrollablePathPartRef}>
                     {path.map((node) => <>
                         <ArrowHeadRightIcon style={{ width: '1rem', height: '1rem' }} />
                         <div className="node" onClick={()=> setSelectedFolderId(node.id)} key={node.id}>{node.name}</div>
