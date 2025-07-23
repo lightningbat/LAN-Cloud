@@ -29,13 +29,14 @@ export default function Content() {
 
     return (
         <div className="explorer-content">
-            <div className="heading">
-                <p className={`name ${selectionMode ? "selection-mode" : ""}`}>Name</p>
-                <p className="size">Size</p>
-                <p className="date">Modified</p>
-            </div>
-
             <div className="list">
+
+                <div className="heading">
+                    <p className={`name ${selectionMode ? "selection-mode" : ""}`}>Name</p>
+                    <p className="size">Size</p>
+                    <p className="date">Modified</p>
+                </div>
+            
                 {selectedFolderId && loading !== selectedFolderId && Object.keys(foldersData[selectedFolderId]?.sub_folders).map((folder_id) =>
                     <Folder key={folder_id} onClick={() => setSelectedFolderId(folder_id)} selectionMode={selectionMode} selectedItems={selectedItems} toggleSelect={()=> toggleSelect(folder_id)} id={folder_id} name={foldersData[folder_id]?.name} size={foldersData[folder_id]?.size} modified={foldersData[folder_id]?.modified_time} />)
                 }

@@ -47,7 +47,7 @@
         .list-item {
             transition: background-color 0.2s ease-in-out;
             width: fit-content;
-            align-items: center;
+            align-items: start;
 
             .item-content {
                 cursor: pointer;
@@ -70,6 +70,7 @@
                 width: 20px;
                 height: 20px;
                 padding: 2px;
+                margin-top: 3px;
                 cursor: pointer;
 
                 svg {
