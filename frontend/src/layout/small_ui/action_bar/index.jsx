@@ -11,8 +11,12 @@ import {
     LockIcon
 } from "../../../icons"
 
+import { useExplorerContext } from "../../../context/explorer_context"
+
 export default function ActionBar() {
-    const icon_style = { width: '1.2rem', height: '1.2rem' }   
+    const icon_style = { width: '1.2rem', height: '1.2rem' }
+    const { selectionMode, setSelectionMode } = useExplorerContext()
+    
     return (
         <div className="action-bar">
             <div className="tooltip">
@@ -20,7 +24,7 @@ export default function ActionBar() {
                 <span className="tooltip-text">Paste</span>
             </div>
             <div className="tooltip">
-                <button className="tooltip-btn"><CheckBoxIcon style={icon_style} /></button>
+                <button className="tooltip-btn" onClick={()=> setSelectionMode(!selectionMode)}><CheckBoxIcon style={icon_style} /></button>
                 <span className="tooltip-text">Select</span>
             </div>
             <div className="tooltip">

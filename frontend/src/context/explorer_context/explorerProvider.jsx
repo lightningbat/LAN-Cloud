@@ -30,6 +30,19 @@ const ExplorerProvider = ({ children }) => {
         },
         UserTags: {} // tag id => { files: [], folders: [] }
     });
+    const [selectionMode, setSelectionMode] = useState(false)
+    const [selectedItems, updateSelectedItems] = useImmer({}); // id => "file" | "folder"
+
+    // clear selected items if selection mode is disabled
+    useEffect(() => {
+        if (!selectionMode) {
+            updateSelectedItems((draft) => {
+                for (const id in draft) {
+                    delete draft[id];
+                }
+            });
+        }
+    })
 
     function setSelectedFolderId(id) {
         if (id === null) {
@@ -306,8 +319,11 @@ const ExplorerProvider = ({ children }) => {
             loadFolder,
             selectedTagState,
             setSelectedTagState,
-            tagsItems
-
+            tagsItems,
+            selectionMode,
+            setSelectionMode,
+            selectedItems,
+            updateSelectedItems,
         }}>
             {children}
         </ExplorerContext.Provider>

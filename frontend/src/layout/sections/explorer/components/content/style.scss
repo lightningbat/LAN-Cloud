@@ -23,9 +23,13 @@
     .heading {
         font-size: 0.7rem;
         font-weight: 500;
+
+        .name.selection-mode {
+            margin-left: calc(20px + 0.5rem);
+        }
     }
 
-    .heading, .list-item {
+    .heading, .list-item, .item-content {
         display: flex;
         align-items: start;
         gap: 0.5rem;
@@ -43,10 +47,35 @@
         .list-item {
             transition: background-color 0.2s ease-in-out;
             width: fit-content;
-            cursor: pointer;
+            align-items: center;
+
+            .item-content {
+                cursor: pointer;
+
+                &.selected {
+                    background-color: var(--selected-bg) !important;
+                }
+                &.selected:hover {
+                    background-color: var(--bg-interactive) !important;
+                }
+            }
 
             &:hover {
-                background-color: var(--bg-interactive);
+                .item-content {
+                    background-color: var(--bg-interactive);
+                }
+            }
+
+            .checkbox {
+                width: 20px;
+                height: 20px;
+                padding: 2px;
+                cursor: pointer;
+
+                svg {
+                    width: 100%;
+                    height: 100%;
+                }
             }
 
             .size, .date {

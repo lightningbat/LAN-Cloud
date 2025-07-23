@@ -30,6 +30,8 @@ import ToolbarIcon from "./toolbar";
 import ActionbarIcon from "./actionbar";
 import EyeOpenIcon from "./eye_open";
 import EyeCloseIcon from "./eye_closed";
+import CheckBoxCheckedIcon from "./checkbox_checked";
+import CheckBoxUnCheckedIcon from "./checkbox_unchecked";
 
 export {
     SunIcon,
@@ -64,4 +66,6 @@ export {
     ActionbarIcon,
     EyeOpenIcon,
     EyeCloseIcon,
+    CheckBoxCheckedIcon,
+    CheckBoxUnCheckedIcon,
 }
