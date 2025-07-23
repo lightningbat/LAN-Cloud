@@ -77,8 +77,10 @@ svg {
         transition: opacity 0.2s ease-in-out;
     }
     
-    &:hover .tooltip-text {
-        opacity: 1;
+    .tooltip-btn {
+        &:hover + .tooltip-text {
+            opacity: 1;
+        }
     }
 
     @media screen and (max-width: variables.$side-menu-float-width) {
