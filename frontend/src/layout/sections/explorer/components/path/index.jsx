@@ -4,12 +4,12 @@ import { useExplorerContext } from "../../../../../context/explorer_context";
 import { useEffect, useRef, useState } from "react";
 
 export default function Path(props) {
-    const { loading, foldersData, selectedFolderId, setSelectedFolderId, selectedTagState, tagsInfo } = useExplorerContext();
+    const { loading, foldersData, selectedFolderId, setSelectedFolderId, selectedTagState, tagsInfo, rootFolderId } = useExplorerContext();
     const [path, setPath] = useState([]);
     const scrollablePathPartRef = useRef();
 
     useEffect(() => {
-        if (selectedFolderId === null || selectedFolderId === "root") { // since root is hard cooded
+        if (selectedFolderId === null || selectedFolderId === rootFolderId) {
             setPath([]);
             return;
         }
@@ -19,12 +19,12 @@ export default function Path(props) {
         if (!foldersData[selectedFolderId]) return;
         // climb up till root is reached or parent folder is not loaded 
         let currentFolderId = foldersData[selectedFolderId].parent_id;
-        while (foldersData[currentFolderId] && currentFolderId !== "root") {
+        while (foldersData[currentFolderId] && currentFolderId !== rootFolderId) {
             _path.unshift({ id: currentFolderId, name: foldersData[currentFolderId]?.name, loading: loading === currentFolderId });
             currentFolderId = foldersData[currentFolderId]?.parent_id;
         }
         setPath(_path);
-    }, [selectedFolderId, foldersData, loading])
+    }, [selectedFolderId, foldersData, loading, rootFolderId])
 
     useEffect(() => {
         if (scrollablePathPartRef.current) scrollablePathPartRef.current.scrollLeft = scrollablePathPartRef.current.scrollWidth
@@ -32,7 +32,7 @@ export default function Path(props) {
     
     return (
         <div className="path" {...props} >
-            {foldersData["root"] && selectedFolderId && <div className="node root" onClick={()=> setSelectedFolderId("root")}><HomeIcon style={{ width: '1.2rem', height: '1.2rem' }} /></div>}
+            {foldersData[rootFolderId] && selectedFolderId && <div className="node root" onClick={()=> setSelectedFolderId(rootFolderId)}><HomeIcon style={{ width: '1.2rem', height: '1.2rem' }} /></div>}
             {selectedTagState && selectedTagState.type === "SystemTags" && (
                 <div>
                     {selectedTagState.id === "images" && <div className="system-tag"><ImageIcon style={{ width: '1.2rem', height: '1.2rem' }} /> Images</div>}

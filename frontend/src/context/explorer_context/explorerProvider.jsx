@@ -7,6 +7,7 @@ import { useImmer } from "use-immer";
 const ExplorerProvider = ({ children }) => {
     const { authenticated } = useUiContext();
 
+    const [rootFolderId, setRootFolderId] = useState(null);
     const [loading, setLoading] = useState(null);
     const [foldersData, updateFoldersData] = useImmer({});
     const [filesData, updateFilesData] = useImmer({});
@@ -75,9 +76,16 @@ const ExplorerProvider = ({ children }) => {
         (async () => {
             if (authenticated) {
 
-                await loadFolder("root", true);
-                setLoading(null);
+                // fetch root folder id
+                const resp = await fetch(`${import.meta.env.VITE_SERVER_URL}/getRootDirId`);
+                if (resp.status !== 200) {
+                    alert("Failed to get root folder id");
+                    return;
+                }
+                const { root_dir_id } = await resp.json();
+                setRootFolderId(root_dir_id);
 
+                // fetch tags info
                 const { Key, SessionId } = await getKey();
 
                 const tags_resp = await _fetch("getTags", { session_id: SessionId });
@@ -116,6 +124,15 @@ const ExplorerProvider = ({ children }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authenticated]);
 
+    // load root folder
+    useEffect(() => {
+        if (!rootFolderId) return;
+        (async () => {
+            await loadFolder(rootFolderId, true);
+        })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [rootFolderId])
+
     useEffect(() => {
         if (selectedFolderId) {
             const subfolder_ids = Object.keys(foldersData[selectedFolderId]?.sub_folders || {});
@@ -133,10 +150,9 @@ const ExplorerProvider = ({ children }) => {
                     let parent_folder_id = foldersData[selectedFolderId].parent_id;
                     async function recurse(parent_folder_id) {
                         // return if parent_folder_id is root
-                        if (parent_folder_id === "root") return;
-                        // recurse if parent folder is already loaded and also it's not root
-                        // use case scenario: root: loaded -> folder1: not loaded -> folder2(current folder in check): loaded
-                        if (foldersData[parent_folder_id] && parent_folder_id !== "root") {
+                        if (parent_folder_id === rootFolderId) return;
+                        // skip loading if parent_folder_id is already loaded
+                        if (foldersData[parent_folder_id]) {
                             return await recurse(foldersData[parent_folder_id].parent_id);
                         }
                         const res = await loadFolder(parent_folder_id); // load parent folder
@@ -308,6 +324,7 @@ const ExplorerProvider = ({ children }) => {
 
     return (
         <ExplorerContext.Provider value={{
+            rootFolderId,
             loading,
             foldersData,
             updateFoldersData,

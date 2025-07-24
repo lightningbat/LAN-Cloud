@@ -204,6 +204,26 @@ func refreshSessionKey(w http.ResponseWriter, r *http.Request) {
 
 /* Authentication /// */
 
+func getRootDirId(w http.ResponseWriter, r *http.Request) {
+	// rate limit
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "get_root_dir_path"
+	if !getRateLimiter(rateLimit_key, 50, 60*time.Second) { // 50 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(struct {
+		RootDirId string `json:"root_dir_id"`
+	}{
+		RootDirId: shared.RootDirId,
+	})
+}
+
 func getFolder(w http.ResponseWriter, r *http.Request) {
 	// parse request body
 	var folder struct {

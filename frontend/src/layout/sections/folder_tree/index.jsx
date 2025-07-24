@@ -8,15 +8,16 @@ import { useImmer } from "use-immer"
 export default function FolderTree() {
     // use ui context
     const { isFolderTreeOpen, setIsFolderTreeOpen } = useUiContext();
-    const { foldersData, selectedFolderId } = useExplorerContext();
+    const { foldersData, selectedFolderId, rootFolderId } = useExplorerContext();
     const [nodeState, setNodeState] = useImmer({});
     const folderTreeRef = useRef(null);
 
+    // set node state
     useEffect(() => {
-        if (foldersData["root"]) {
+        if (foldersData[rootFolderId]) {
             const _nodeState = {};
-            if (nodeState["root"] === undefined) _nodeState["root"] = true;
-            else _nodeState["root"] = nodeState["root"];
+            if (nodeState[rootFolderId] === undefined) _nodeState[rootFolderId] = true;
+            else _nodeState[rootFolderId] = nodeState[rootFolderId];
             const recurse = (parent_id) => {
                 if (!foldersData[parent_id]) return;
                 const child_ids = Object.keys(foldersData[parent_id].sub_folders);
@@ -26,7 +27,7 @@ export default function FolderTree() {
                     recurse(child_id);
                 }
             }
-            recurse("root");
+            recurse(rootFolderId);
             setNodeState(_nodeState);
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -38,15 +39,15 @@ export default function FolderTree() {
             setNodeState(draft => {
                 draft[selectedFolderId] = true;
                 function recurse(parent_id) {
-                    if (parent_id === "root") {
-                        draft["root"] = true;
+                    if (parent_id === rootFolderId) {
+                        draft[rootFolderId] = true;
                         return;
                     }
                     if (!foldersData[parent_id]) return;
                     draft[parent_id] = true;
                     recurse(foldersData[parent_id].parent_id);
                 }
-                if (selectedFolderId !== "root") recurse(foldersData[selectedFolderId].parent_id);
+                if (selectedFolderId !== rootFolderId) recurse(foldersData[selectedFolderId].parent_id);
             })
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -92,7 +93,7 @@ export default function FolderTree() {
                     <CloseIcon style={{ width: '1.2rem', height: '1.2rem' }} />
                 </button>
             </div>
-            <FolderNode folder_id="root" opened={nodeState} setOpened={setNodeState} />
+            <FolderNode folder_id={rootFolderId} opened={nodeState} setOpened={setNodeState} />
         </div>
     )
 }
