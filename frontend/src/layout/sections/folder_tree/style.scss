@@ -31,10 +31,11 @@
     .folder-node {
         margin-top: 0.3rem;
         flex: 1;
-        overflow-y: auto;
+        overflow: auto;
 
         &::-webkit-scrollbar {
             width: 5px;
+            height: 5px;
         }
         
         .left-right-parent {
