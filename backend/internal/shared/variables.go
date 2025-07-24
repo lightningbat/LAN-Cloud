@@ -11,12 +11,10 @@ var (
 	// serverpassconfig.go //
 
 	/*// metadata.go //*/
+		RootDirId string
 		FileMetadataMap = make(map[string]*FileMetadata) // file id => FileMetadata
 		FolderMetadataMap = make(map[string]*FolderMetadata) // folder id => FolderMetadata
 		UserTagsMetadata = make(map[string]*UserTagMetadata) // user tag id => UserTagMetadata
-		// for faster lookup for file/folder id by relative path
-		FolderRelPathToId = make(map[string]string) // relative path => folder id
-		FileRelPathToId  = make(map[string]string) // relative path => file id
 		// holds file ids for each system tag
 		SystemTags = map[string]map[string]struct{}{"images": {}, "videos": {}, "audios": {}, "documents": {}} // e.g. image: {id1: {}, id2: {}, ...}
 		// ram cache for custom tags list

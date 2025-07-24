@@ -7,7 +7,6 @@ type Storage struct {
 
 type FileMetadata struct {
 	Name         string   `json:"name"`
-	RelativePath string   `json:"relative_path"`
 	ParentId     string   `json:"parent_id"`
 	Size         int64    `json:"size"`
 	ModifiedTime int64    `json:"modified_time"`
@@ -18,7 +17,6 @@ type FileMetadata struct {
 
 type FolderMetadata struct {
 	Name         string              `json:"name"`
-	RelativePath string              `json:"relative_path"`
 	ParentId     string              `json:"parent_id"`
 	Size         int64               `json:"size"`
 	ModifiedTime int64               `json:"modified_time"`

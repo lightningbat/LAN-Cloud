@@ -3,22 +3,13 @@ package metadata
 import (
 	"encoding/json"
 	"fmt"
+	"lan-cloud/internal/fsid"
 	"lan-cloud/internal/shared"
 	"lan-cloud/internal/utils"
 	"os"
 	"path/filepath"
 )
 
-// NOTE: File identity is tracked using relative file paths.
-// This means if a file is renamed, moved, or replaced outside this application,
-// it will be treated as a deletion and remapped as a new file.
-//
-// True file tracking across renames or replacements would require OS-level hooks
-// (e.g., inotify, USN journal) or a full versioned content hashing system,
-// which is out of scope for this lightweight LAN storage server.
-//
-// This trade-off is intentional and simplifies resync logic while remaining
-// reliable for real-world usage.
 var (
 	metadataDirPath string // root dir for all metadata
 	metadataFileContPath string // individual storage metadata file container
@@ -29,11 +20,20 @@ var (
 
 func Load() error {
 	if err := setMetadataFilesPath(); err != nil { return err }
+	if err := initRootId(); err != nil { return err }
 	// read FileMetadataMap file
 	if err := loadMetaData(fileMetadataPath); err != nil { return err }
 	if err := loadMetaData(folderMetadataPath); err != nil { return err }
 	if err := loadMetaData(userTagsMetaDataPath); err != nil { return err }
-	loadRelativePathToId()
+	loadTags()
+	return nil
+}
+
+// sets root directory id in memory
+func initRootId() error {
+	rootDirId, err := fsid.GetID(shared.ActiveStorage.Path)
+	if err != nil { return err }
+	shared.RootDirId = rootDirId
 	return nil
 }
 
@@ -135,67 +135,39 @@ func SaveUserTagsMetaData() error {
 	return nil
 }
 
-func AddFileMetadata(filemetadata *shared.FileMetadata) (id string) {
-	id = shared.HashPath(filemetadata.RelativePath) // generate file id from relative path
-	// map file metadata id to FilesMetadata list
+func AddFileMetadata( id string, filemetadata *shared.FileMetadata){
 	shared.FileMetadataMap[id] = filemetadata
-	// map relative path to file id
-	shared.FileRelPathToId[filemetadata.RelativePath] = id
-	// add file id to parent folder's file list
-	shared.FolderMetadataMap[filemetadata.ParentId].Files[id] = struct{}{}
 	filemetadata.SystemTag = utils.GetFileCategory(filemetadata.Name) // set system tag
-	// add file id to it's associate system tag list
+	// add file id to it's system tag type list
 	if (filemetadata.SystemTag != "") { shared.SystemTags[filemetadata.SystemTag][id] = struct{}{} }
-	return
-}
-func AddFolderMetadata(foldermetadata *shared.FolderMetadata) (id string) {
-	if foldermetadata.RelativePath == "" {
-		id = "root" // set root folder id to "root"
-	} else {
-		id = shared.HashPath(foldermetadata.RelativePath) // generate folder id from relative path
-		// add folder id to parent folder subfolder list
-		shared.FolderMetadataMap[foldermetadata.ParentId].SubFolders[id] = struct{}{}
-	}
-	// map folder metadata id to FolderMetadata list
-	shared.FolderMetadataMap[id] = foldermetadata
-	// map relative path to folder id
-	shared.FolderRelPathToId[foldermetadata.RelativePath] = id
-	return
 }
 
 func DeleteFileMetadata(id string) {
-	// delete from relative path to id map
-	delete(shared.FileRelPathToId, shared.FileMetadataMap[id].RelativePath)
 	// delete id from custom tags list
 	for _, tag := range shared.FileMetadataMap[id].Tags {
 		delete(shared.UserTagsItems[tag], id)
 	}
 	// delete id from system tags list
 	delete(shared.SystemTags[shared.FileMetadataMap[id].SystemTag], id)
-	// delete id from parent folder file list
+	// delete id from parent folder's file list
 	delete(shared.FolderMetadataMap[shared.FileMetadataMap[id].ParentId].Files, id)
 	// delete from FileMetadataMap
 	delete(shared.FileMetadataMap, id)
 }
 
 func DeleteFolderMetadata(id string) {
-	// delete from relative path to id map
-	delete(shared.FolderRelPathToId, shared.FolderMetadataMap[id].RelativePath)
 	// delete id from custom tags list
 	for _, tag := range shared.FolderMetadataMap[id].Tags {
 		delete(shared.UserTagsItems[tag], id)
 	}
-	// delete from parent folder subfolder list
+	// delete from parent's subfolder list
 	delete(shared.FolderMetadataMap[shared.FolderMetadataMap[id].ParentId].SubFolders, id)
 	// delete from FolderMetadataMap
 	delete(shared.FolderMetadataMap, id)
 }
 
-// maps relative path to file/folder id
-func loadRelativePathToId() {
-	// map relative path to file id
+func loadTags() {
 	for id, metaData := range shared.FileMetadataMap {
-		shared.FileRelPathToId[metaData.RelativePath] = id
 		// add file id to it's associate system tag list
 		if (metaData.SystemTag != "") { shared.SystemTags[metaData.SystemTag][id] = struct{}{} }
 		// add file id to custom tags list
@@ -203,9 +175,7 @@ func loadRelativePathToId() {
 			shared.UserTagsItems[tag][id] = "file"
 		}
 	}
-	// map relative path to folder id
 	for id, metaData := range shared.FolderMetadataMap {
-		shared.FolderRelPathToId[metaData.RelativePath] = id
 		// add folder id to custom tags list
 		for _, tag := range metaData.Tags {
 			shared.UserTagsItems[tag][id] = "folder"
