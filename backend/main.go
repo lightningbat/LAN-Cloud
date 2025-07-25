@@ -24,16 +24,21 @@ func init() {
 
 func main() {
 	flag.Parse()
-	start := time.Now()
+	
 	if err := config.LoadStorageConfig(cliStoragePath); err != nil { panic(err) }
 	if err := config.LoadServerPassConfig(resetPassword); err != nil { panic(err) }
+	
+	fmt.Println("Loading Metadata...")
+	metadataProcess := time.Now()
 	if err := metadata.Load(); err != nil { panic(err) }
-	if !skipSync { if err := filesystem.SyncMetadata(); err != nil { panic(err) } }
-	elapsed := time.Since(start)
-	fmt.Printf("Process took %s\n", elapsed)
+	fmt.Printf("Metadata Process took %s\n", time.Since(metadataProcess))
+	
+	if !skipSync {
+		fmt.Println("Syncing Metadata...")
+		syncProcess := time.Now()
+		if err := filesystem.SyncMetadata(); err != nil { panic(err) } 
+		fmt.Printf("Sync Process took %s\n", time.Since(syncProcess))
+	}
 
 	server.Start()
-
-	// fmt.Println("Press enter to exit...")
-	// fmt.Scanln()
 }

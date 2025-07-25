@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"lan-cloud/internal/shared"
+	"lan-cloud/internal/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -91,7 +92,7 @@ func updateActiveStorage(path string) error {
 		}
 	}
 	// if provided storage path doesn't exist in storageconfig
-	storage := shared.Storage{Path: path, Metadata: shared.HashPath(path)} // { Path: storagePath, Metadata: hashedMetadataFileContainerName }
+	storage := shared.Storage{Path: path, Metadata: utils.HashString(path)} // { Path: storagePath, Metadata: hashedMetadataFileContainerName }
 	storageConfig.Storages = append(storageConfig.Storages, storage)
 	storageConfig.ActiveStorageIndex = len(storageConfig.Storages) - 1
 	return saveConfig()
