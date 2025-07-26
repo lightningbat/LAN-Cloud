@@ -75,14 +75,14 @@ func DecryptAESGCM(key []byte, ivBase64 string, ciphertextBase64 string) (plaint
 	return plaintext, nil
 }
 
-func DecryptJSON(key []byte, ivBase64 string, ciphertextBase64 string) (data interface{}, err error) {
+func DecryptJSON(key []byte, ivBase64 string, ciphertextBase64 string, target interface{}) error {
 	plaintext, err := DecryptAESGCM(key, ivBase64, ciphertextBase64)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	err = json.Unmarshal(plaintext, &data)
+	err = json.Unmarshal(plaintext, target)
 	if err != nil {
-		return nil, err
+		return err
 	}
-	return data, nil
+	return nil
 }
