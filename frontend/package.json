@@ -14,6 +14,7 @@
     "@stablelib/aes": "^2.0.1",
     "@stablelib/gcm": "^2.0.1",
     "@stablelib/hmac": "^2.0.1",
+    "@stablelib/random": "^2.0.1",
     "@stablelib/sha256": "^2.0.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
