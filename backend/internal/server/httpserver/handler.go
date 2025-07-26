@@ -435,3 +435,55 @@ func getFoldersMetaData(w http.ResponseWriter, r *http.Request) {
 		ciphertextBase64,
 	})
 }
+
+func rename(w http.ResponseWriter, r *http.Request) {
+	// rate limit
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "rename"
+	if !getRateLimiter(rateLimit_key, 30, 60*time.Second) { // 30 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
+	// parse request body
+	var request struct {
+		IVBase64          string `json:"iv_base64"`
+		CiphertextBase64  string `json:"ciphertext_base64"`
+		SessionId string `json:"session_id"`
+	} // request body struct
+	err = json.NewDecoder(r.Body).Decode(&request)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// get session key from session
+	sessionKey, found := core.SessionKeyCache.Get(request.SessionId)
+	if !found {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	// decrypt item data
+	var requestItemData struct {
+		Id   string `json:"id"`
+		Type string `json:"type"`
+		NewName string `json:"new_name"`
+	}
+	
+	err = crypto.DecryptJSON(sessionKey.([]byte), request.IVBase64, request.CiphertextBase64, &requestItemData)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// rename item
+	err = core.Rename(requestItemData.Id, requestItemData.Type, requestItemData.NewName)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+}

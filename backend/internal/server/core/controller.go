@@ -3,7 +3,11 @@ package core
 import (
 	"encoding/json"
 	"fmt"
+	"lan-cloud/internal/metadata"
 	"lan-cloud/internal/shared"
+	"lan-cloud/internal/utils"
+	"os"
+	"path/filepath"
 )
 
 func GetFolder(folderId string) (data []byte, err error) {
@@ -104,4 +108,32 @@ func GetFoldersMetadata(folderIds *[]string) ([]byte, error) {
 		}
 	}
 	return json.Marshal(foldersMetadata)
+}
+
+func Rename(id string, itemType string, newName string) error {
+	var old_name string
+	if itemType == "folder" {
+		old_name = shared.FolderMetadataMap[id].Name
+	} else {
+		old_name = shared.FileMetadataMap[id].Name
+	}
+
+	path := utils.GetAbsolutePath(id, itemType)
+
+	// rename item in file system
+	err := os.Rename(filepath.Join(path, old_name), filepath.Join(path, newName))
+	if err != nil {
+		return fmt.Errorf("failed to rename item: %v", err)
+	}
+
+	// update item metadata
+	if itemType == "folder" {
+		shared.FolderMetadataMap[id].Name = newName
+		metadata.SaveFolderMetadata()
+	} else {
+		shared.FileMetadataMap[id].Name = newName
+		metadata.SaveFileMetadata()
+	}
+
+	return nil
 }

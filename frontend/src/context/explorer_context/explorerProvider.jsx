@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import ExplorerContext from "./explorerContext";
 import { useUiContext } from "../ui_context";
-import { getKey, decryptAESGCM, decryptJSON } from "../../utils/crypto";
+import { getKey, decryptAESGCM, decryptJSON, encryptJSON } from "../../utils/crypto";
 import { useImmer } from "use-immer";
 
 const ExplorerProvider = ({ children }) => {
@@ -11,7 +11,7 @@ const ExplorerProvider = ({ children }) => {
     const [loading, setLoading] = useState(null);
     const [foldersData, updateFoldersData] = useImmer({});
     const [filesData, updateFilesData] = useImmer({});
-    const [selectedFolderId, _setSelectedFolderId] = useState(null);
+    const [selectedFolderId, _setSelectedFolderId] = useState(null); // null | folder_id
     const [selectedTagState, _setSelectedTagState] = useState(null); // null | { type: "SystemTags" | "User", id: tag_id | "image" | "video" | "audio" | "document" }
     const [tagsInfo, updateTagsInfo] = useImmer({
         SystemTags: {
@@ -33,6 +33,32 @@ const ExplorerProvider = ({ children }) => {
     });
     const [selectionMode, setSelectionMode] = useState(false)
     const [selectedItems, updateSelectedItems] = useImmer({}); // id => "file" | "folder"
+    // if only one item is selected, and renameState is true, than name of the item will be replaced with input
+    const [renameState, setRenameState] = useState(false);
+    
+    async function rename(old_name, new_name) {
+        if (renameState) {
+            setRenameState(false);
+            new_name = new_name.trim();
+            if (new_name === "" || old_name === new_name) return;
+            const jsonData = { id: Object.keys(selectedItems)[0], type: Object.values(selectedItems)[0], new_name };
+            const { Key, SessionId } = getKey();
+            const { iv, ciphertext } = await encryptJSON(Key, jsonData);
+            const res = await _fetch("rename", { session_id: SessionId, iv_base64: iv, ciphertext_base64: ciphertext });
+            if (res.status === 200) {
+                if (Object.values(selectedItems)[0] === "folder") {
+                    updateFoldersData(draft => {
+                        draft[Object.keys(selectedItems)[0]] = { ...draft[Object.keys(selectedItems)[0]], name: new_name };
+                    });
+                } else {
+                    updateFilesData(draft => {
+                        draft[Object.keys(selectedItems)[0]] = { ...draft[Object.keys(selectedItems)[0]], name: new_name };
+                    });
+                }
+            }
+        }
+    }
+
 
     // clear selected items if selection mode is disabled
     useEffect(() => {
@@ -341,6 +367,9 @@ const ExplorerProvider = ({ children }) => {
             setSelectionMode,
             selectedItems,
             updateSelectedItems,
+            renameState,
+            setRenameState,
+            rename,
         }}>
             {children}
         </ExplorerContext.Provider>
