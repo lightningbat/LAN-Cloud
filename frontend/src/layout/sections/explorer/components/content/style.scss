@@ -13,8 +13,13 @@
     }
     
     .name {
-        margin-right: 10px;
+        min-width: 100px;
         word-break: break-all;
+    }
+
+    .size {
+        min-width: 80px;
+        max-width: 100px;
     }
     
     .date {
@@ -34,22 +39,24 @@
     .heading, .list-item, .item-content {
         display: flex;
         align-items: start;
-        gap: 0.5rem;
+        gap: clamp(5px, 2vw, 20px);
     }
 
     .list {
         flex: 1;
         overflow-y: auto;
-        font-size: 0.8rem;
+        font-size: 0.85rem;
 
         &::-webkit-scrollbar {
             width: 5px;
+            height: 5px;
         }
 
         .list-item {
             transition: background-color 0.2s ease-in-out;
             width: fit-content;
             align-items: start;
+            gap: 0.5rem;
 
             .item-content {
                 cursor: pointer;
@@ -81,8 +88,12 @@
                 }
             }
 
-            .size, .date {
+            .size {
                 white-space: nowrap;
+            }
+
+            .size, .date {
+                font-size: 0.72rem;
             }
 
             .name {
@@ -92,10 +103,10 @@
                 white-space: wrap;
 
                 input {
-                    width: calc(100% - 10px);
+                    width: 100%;
                     border: 1px solid var(--border);
                     border-radius: variables.$base-border-radius;
-                    padding: 0.2rem;
+                    padding: 0.15rem 0.2rem;
                     outline: none;
                     background-color: var(--bg-interactive);
                     color: var(--text-primary);

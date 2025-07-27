@@ -114,7 +114,7 @@ function Name({ icon, name, renameState, rename }) {
         <div className='name'>
             {icon}
             { renameState ? 
-                <form onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}><input type="text" defaultValue={name} /></form> : 
+                <form onClick={(e) => e.stopPropagation()} onSubmit={handleSubmit}><input type="text" defaultValue={name} autoFocus /></form> : 
                 <p>{name}</p>}
         </div>
     )

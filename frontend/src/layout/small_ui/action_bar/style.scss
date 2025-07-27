@@ -5,6 +5,7 @@
     overflow-x: visible;
     align-items: center;
     height: 100%;
+    width: fit-content;
     background-color: var(--bg-secondary);
 
     &::-webkit-scrollbar {
