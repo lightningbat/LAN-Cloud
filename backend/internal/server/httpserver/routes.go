@@ -6,7 +6,7 @@ func RegisterRoutes(mux *http.ServeMux) {
 	mux.HandleFunc("POST /handshake/connect", handShakeConnect)
 	mux.HandleFunc("POST /handshake/authenticate", handShakeAuthenticate)
 	mux.HandleFunc("POST /refreshSessionKey", refreshSessionKey)
-	mux.HandleFunc("GET /getRootDirId", getRootDirId)
+	mux.HandleFunc("POST /getRootDirId", getRootDirId)
 	mux.HandleFunc("POST /getFolder", getFolder)
 	mux.HandleFunc("POST /getTags", getTags)
 	mux.HandleFunc("POST /getTagItems", getTagItems)

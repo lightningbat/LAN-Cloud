@@ -27,10 +27,10 @@ func handShakeConnect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var requestData struct {
+	var requestBody struct {
 		ClientData string `json:"client_data"`
 	}
-	err = json.NewDecoder(r.Body).Decode(&requestData)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -48,7 +48,7 @@ func handShakeConnect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// aes-gcm encrypt nonce and clientData
-	ivBase64, ciphertextBase64, err := crypto.EncryptAESGCM(hashPassByte, []byte(nonceStr+requestData.ClientData))
+	ivBase64, ciphertextBase64, err := crypto.EncryptAESGCM(hashPassByte, []byte(nonceStr+requestBody.ClientData))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -84,18 +84,18 @@ func handShakeAuthenticate(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse request body
-	var requestData struct {
+	var requestBody struct {
 		SessionId string `json:"session_id"`
 		AuthKey   string `json:"auth_key"`
 	}
-	err = json.NewDecoder(r.Body).Decode(&requestData)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	password := shared.ServerPassConfig.Scrypt.Hash // use scrypt hash as password
-	nonceStr, found := core.NonceCache.Get(requestData.SessionId) // get nonce from session
+	nonceStr, found := core.NonceCache.Get(requestBody.SessionId) // get nonce from session
 	if !found {
 		http.Error(w, "Invalid session ID", http.StatusBadRequest)
 		return
@@ -116,7 +116,7 @@ func handShakeAuthenticate(w http.ResponseWriter, r *http.Request) {
 	// convert hashed data to base64
 	hashedDataStr := base64.StdEncoding.EncodeToString(hashedData)
 
-	if hashedDataStr != requestData.AuthKey {
+	if hashedDataStr != requestBody.AuthKey {
 		http.Error(w, "Invalid authentication key", http.StatusUnauthorized)
 		return
 	}
@@ -160,17 +160,17 @@ func refreshSessionKey(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse request body
-	var requestData struct {
+	var requestBody struct {
 		SessionId string `json:"session_id"`
 	}
-	err = json.NewDecoder(r.Body).Decode(&requestData)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	// get session key from session
-	oldSessionKey, found := core.SessionKeyCache.Get(requestData.SessionId)
+	oldSessionKey, found := core.SessionKeyCache.Get(requestBody.SessionId)
 	if !found {
 		http.Error(w, "Invalid session ID", http.StatusBadRequest)
 		return
@@ -216,11 +216,41 @@ func getRootDirId(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// parse request body
+	var requestBody struct {
+		SessionId string `json:"session_id"`
+	}
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	// get session key from session
+	sessionKey, found := core.SessionKeyCache.Get(requestBody.SessionId)
+	if !found {
+		http.Error(w, "Invalid session ID", http.StatusBadRequest)
+		return
+	}
+
+	var response = struct {
+		RootDirId string `json:"root_dir_id"`
+	}{ RootDirId: shared.RootDirId }
+
+	// encrypt response
+	ivBase64, ciphertextBase64, err := crypto.EncryptJSON(sessionKey.([]byte), response)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
+	// write response
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(struct {
-		RootDirId string `json:"root_dir_id"`
+		IVBase64            string `json:"iv_base64"`
+		CiphertextBase64    string `json:"ciphertext_base64"`
 	}{
-		RootDirId: shared.RootDirId,
+		ivBase64,
+		ciphertextBase64,
 	})
 }
 
@@ -237,25 +267,35 @@ func getFolder(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse request body
-	var folder struct {
-		FolderId string `json:"folder_id"`
+	var requestBody struct {
+		IVBase64  string `json:"iv_base64"`
+		CiphertextBase64  string `json:"ciphertext_base64"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err = json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// get session key from session
-	sessionKey, found := core.SessionKeyCache.Get(folder.SessionId)
+	sessionKey, found := core.SessionKeyCache.Get(requestBody.SessionId)
 	if !found {
 		http.Error(w, "Invalid session ID", http.StatusBadRequest)
 		return
 	}
 
+	var decryptedRequest struct {
+		FolderId string `json:"folder_id"`
+	}
+	// decrypt request body
+	err = crypto.DecryptJSON(sessionKey.([]byte), requestBody.IVBase64, requestBody.CiphertextBase64, &decryptedRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
 	// get folder data
-	data, err := core.GetFolder(folder.FolderId)
+	data, err := core.GetFolder(decryptedRequest.FolderId)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -291,17 +331,17 @@ func getTags(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse request body
-	var folder struct {
+	var requestBody struct {
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err = json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// get session key from session
-	sessionKey, found := core.SessionKeyCache.Get(folder.SessionId)
+	sessionKey, found := core.SessionKeyCache.Get(requestBody.SessionId)
 	if !found {
 		http.Error(w, "Invalid session ID", http.StatusBadRequest)
 		return
@@ -398,25 +438,36 @@ func getFilesMetaData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse request body
-	var folder struct {
-		FileIds   []string `json:"file_ids"`
+	var requestBody struct {
+		IVBase64  string   `json:"iv_base64"`
+		CiphertextBase64  string   `json:"ciphertext_base64"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err = json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// get session key from session
-	sessionKey, found := core.SessionKeyCache.Get(folder.SessionId)
+	sessionKey, found := core.SessionKeyCache.Get(requestBody.SessionId)
 	if !found {
 		http.Error(w, "Invalid session ID", http.StatusBadRequest)
 		return
 	}
+	
+	var decryptedRequest struct {
+		FileIds []string `json:"file_ids"`
+	}
+	// decrypt request body
+	err = crypto.DecryptJSON(sessionKey.([]byte), requestBody.IVBase64, requestBody.CiphertextBase64, &decryptedRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
 
 	// get files metadata data
-	data, err := core.GetFilesMetadata(&folder.FileIds)
+	data, err := core.GetFilesMetadata(&decryptedRequest.FileIds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
@@ -451,25 +502,37 @@ func getFoldersMetaData(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// parse request body
-	var folder struct {
-		FolderIds []string `json:"folder_ids"`
+	var requestBody struct {
+		IVBase64  string   `json:"iv_base64"`
+		CiphertextBase64  string   `json:"ciphertext_base64"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err = json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&requestBody)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	// get session key from session
-	sessionKey, found := core.SessionKeyCache.Get(folder.SessionId)
+	sessionKey, found := core.SessionKeyCache.Get(requestBody.SessionId)
 	if !found {
 		http.Error(w, "Invalid session ID", http.StatusBadRequest)
 		return
 	}
 
+	var decryptedRequest struct {
+		FolderIds []string `json:"folder_ids"`
+	}
+
+	// decrypt request body
+	err = crypto.DecryptJSON(sessionKey.([]byte), requestBody.IVBase64, requestBody.CiphertextBase64, &decryptedRequest)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
 	// get folders metadata data
-	data, err := core.GetFoldersMetadata(&folder.FolderIds)
+	data, err := core.GetFoldersMetadata(&decryptedRequest.FolderIds)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

@@ -101,19 +101,25 @@ const ExplorerProvider = ({ children }) => {
     useEffect(() => {
         (async () => {
             if (authenticated) {
+                const { Key, SessionId } = await getKey();
 
                 // fetch root folder id
-                const resp = await fetch(`${import.meta.env.VITE_SERVER_URL}/getRootDirId`);
+                // const resp = await fetch(`${import.meta.env.VITE_SERVER_URL}/getRootDirId`);
+                // if (resp.status !== 200) {
+                //     alert("Failed to get root folder id");
+                //     return;
+                // }
+                // const { root_dir_id } = await resp.json();
+                const resp = await _fetch("getRootDirId", { session_id: SessionId });
                 if (resp.status !== 200) {
                     alert("Failed to get root folder id");
                     return;
                 }
-                const { root_dir_id } = await resp.json();
+                const { iv_base64: iv, ciphertext_base64: ciphertext } = await resp.json();
+                const { root_dir_id } = await decryptJSON(Key, iv, ciphertext);
                 setRootFolderId(root_dir_id);
 
                 // fetch tags info
-                const { Key, SessionId } = await getKey();
-
                 const tags_resp = await _fetch("getTags", { session_id: SessionId });
 
                 if (tags_resp.status !== 200) {
@@ -150,7 +156,7 @@ const ExplorerProvider = ({ children }) => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authenticated]);
 
-    // load root folder
+    // load root folder when rootFolderId is set
     useEffect(() => {
         if (!rootFolderId) return;
         (async () => {
@@ -197,9 +203,11 @@ const ExplorerProvider = ({ children }) => {
 
         const { Key, SessionId } = getKey();
 
+        const { iv: req_iv, ciphertext: req_ciphertext } = await encryptJSON(Key, { folder_id });
+
         let response;
         try {
-            response = await _fetch("getFolder", { session_id: SessionId, folder_id });
+            response = await _fetch("getFolder", { session_id: SessionId, iv_base64: req_iv, ciphertext_base64: req_ciphertext });
         } catch {
             alert("Failed to get folder data");
             setLoading(null);
@@ -304,7 +312,9 @@ const ExplorerProvider = ({ children }) => {
         const missing_files = fileIds.filter(file_id => !filesData[file_id]);
         if (missing_files.length > 0) {
             const { Key, SessionId } = getKey();
-            const resp = await _fetch("getFilesMetaData", { session_id: SessionId, file_ids: missing_files });
+            // encrypting file ids
+            const { iv: req_iv, ciphertext: req_ciphertext } = await encryptJSON(Key, { file_ids: missing_files });
+            const resp = await _fetch("getFilesMetaData", { session_id: SessionId, iv_base64: req_iv, ciphertext_base64: req_ciphertext });
             if (resp.status !== 200) {
                 alert("Failed to get files meta data");
                 return;
@@ -328,7 +338,9 @@ const ExplorerProvider = ({ children }) => {
         const missing_folders = folderIds.filter(folder_id => !foldersData[folder_id]);
         if (missing_folders.length > 0) {
             const { Key, SessionId } = getKey();
-            const resp = await _fetch("getFoldersMetaData", { session_id: SessionId, folder_ids: missing_folders });
+            // encrypting folder ids
+            const { iv: req_iv, ciphertext: req_ciphertext } = await encryptJSON(Key, { folder_ids: missing_folders });
+            const resp = await _fetch("getFoldersMetaData", { session_id: SessionId, iv_base64: req_iv, ciphertext_base64: req_ciphertext });
             if (resp.status !== 200) {
                 alert("Failed to get folders meta data");
                 return;
