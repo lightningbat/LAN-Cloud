@@ -225,12 +225,23 @@ func getRootDirId(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFolder(w http.ResponseWriter, r *http.Request) {
+	// rate limit
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "get_folder"
+	if !getRateLimiter(rateLimit_key, 50, 60*time.Second) { // 50 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
 	// parse request body
 	var folder struct {
 		FolderId string `json:"folder_id"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err := json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&folder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -268,11 +279,22 @@ func getFolder(w http.ResponseWriter, r *http.Request) {
 
 // return basic tags info (tag name, id, color, etc.)
 func getTags(w http.ResponseWriter, r *http.Request) {
+	// rate limit
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "get_tags"
+	if !getRateLimiter(rateLimit_key, 20, 60*time.Second) { // 20 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
 	// parse request body
 	var folder struct {
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err := json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&folder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -309,6 +331,17 @@ func getTags(w http.ResponseWriter, r *http.Request) {
 }
 
 func getTagItems(w http.ResponseWriter, r *http.Request) {
+	// rate limit
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "get_tag_items"
+	if !getRateLimiter(rateLimit_key, 30, 60*time.Second) { // 30 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
 	// parse request body
 	var request struct {
 		Tag struct{ 
@@ -316,7 +349,7 @@ func getTagItems(w http.ResponseWriter, r *http.Request) {
 			Id   string `json:"id"` } `json:"tag"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err := json.NewDecoder(r.Body).Decode(&request)
+	err = json.NewDecoder(r.Body).Decode(&request)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -353,12 +386,23 @@ func getTagItems(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFilesMetaData(w http.ResponseWriter, r *http.Request) {
+	// ip rate limit check
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "getFilesMetaData"
+	if !getRateLimiter(rateLimit_key, 60, 60*time.Second) { // 60 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
 	// parse request body
 	var folder struct {
 		FileIds   []string `json:"file_ids"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err := json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&folder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -395,12 +439,23 @@ func getFilesMetaData(w http.ResponseWriter, r *http.Request) {
 }
 
 func getFoldersMetaData(w http.ResponseWriter, r *http.Request) {
+	// ip rate limit check
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+	rateLimit_key := ip + "getFoldersMetaData"
+	if !getRateLimiter(rateLimit_key, 60, 60*time.Second) { // 60 requests per minute
+		http.Error(w, "Rate limit exceeded", http.StatusTooManyRequests)
+		return
+	}
+
 	// parse request body
 	var folder struct {
 		FolderIds []string `json:"folder_ids"`
 		SessionId string `json:"session_id"`
 	} // request body struct
-	err := json.NewDecoder(r.Body).Decode(&folder)
+	err = json.NewDecoder(r.Body).Decode(&folder)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
