@@ -2,6 +2,18 @@ import { AES } from "@stablelib/aes";
 import { GCM } from "@stablelib/gcm";
 import { randomBytes } from "@stablelib/random";
 
+function encodeUint8ArrayToBase64(uint8Array) {
+    let binary = '';
+    const len = uint8Array.byteLength;
+    const chunkSize = 16384;
+
+    for (let i = 0; i < len; i += chunkSize) {
+        const chunk = uint8Array.subarray(i, Math.min(i + chunkSize, len));
+        binary += String.fromCharCode(...chunk);
+    }
+    return btoa(binary);
+}
+
 async function encryptAESGCM(keyByte, plaintext) {
     
     if (window.crypto?.subtle?.importKey) {
@@ -23,7 +35,7 @@ async function encryptAESGCM(keyByte, plaintext) {
         );
         return {
             iv: btoa(String.fromCharCode(...iv)),
-            ciphertext: btoa(String.fromCharCode(...new Uint8Array(encrypted)))
+            ciphertext: encodeUint8ArrayToBase64(new Uint8Array(encrypted))
         };
     } else {
         const iv = randomBytes(12);
@@ -32,7 +44,7 @@ async function encryptAESGCM(keyByte, plaintext) {
         const encrypted = gcm.seal(iv, new TextEncoder().encode(plaintext));
         return {
             iv: btoa(String.fromCharCode(...iv)),
-            ciphertext: btoa(String.fromCharCode(...encrypted))
+            ciphertext: encodeUint8ArrayToBase64(encrypted)
         };
     }
 }
